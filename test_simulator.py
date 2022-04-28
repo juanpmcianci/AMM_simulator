@@ -7,10 +7,6 @@ Main (v)AMM simulator
 This simulates the price discovery position of an AMM. 
 
 
-
-This is how the code works. There is a 
-
-
 Created on Wed Apr  6 14:16:58 2022
 
 @author: juan
