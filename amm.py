@@ -6,7 +6,7 @@ Created on Thu Apr 28 12:56:26 2022
 @author: juan
 
 This is the main class for the definition of trading functions.
-Any new class should include AT LEAST all the classes in the UNIV2
+Any new class should include AT LEAST all the methods in the UNIV2
 
 
 
