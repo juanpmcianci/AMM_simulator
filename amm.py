@@ -81,7 +81,7 @@ class UNIV2:
             slippage: "quoted" price vs "filled" price.
 
         '''
-        return self.get_reference_price()-self.quote_trade(amount, side)
+        return self.get_reference_price()*self.quote_trade(amount, side)-amount
     
 
     
