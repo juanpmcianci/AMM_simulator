@@ -77,4 +77,62 @@ def simple_logic(current,oracle,fee):
         
     return side, arb_zone
 
+def only_arb_zone(current,oracle,fee):
+    '''
+    here we define a set of very simple rules. 
+ 
+     * If we are on an arbitrage region, perform arbitrage with probability 1
+       here, given a market price m, an oracle price p, and a fee f in (0,1),
+       the arbitrage region is 
+       
+       m such that m<(1-f)p  OR m>p/(1-f)
+     
+     
+     
+     * No trade otherwise
 
+    Parameters
+    ----------
+    current : float
+        current AMM price.
+    oracle : float
+        current oracle price.
+    fee : float in (0,1)
+        DESCRIPTION.
+
+    Returns
+    -------
+    side : str, 'buy', 'sell'
+        whether there's a buy or a sell.
+    arb_zone : int: -1, 0, 1
+        -1: arbitrage, sell
+        0: not in arb zone
+        1: arbitrage, buy.
+
+    '''
+
+    '''
+    
+   
+    
+    '''
+    gamma=1-fee
+    arb_sell=current>oracle/gamma
+    arb_buy=current<gamma*oracle
+    
+    if arb_sell:
+        prob_buy=0
+        side='sell'
+        arb_zone=-1
+    elif arb_buy:
+        prob_buy=1
+        side='buy'
+        arb_zone=1
+    else:
+        side=None
+        arb_zone=0
+    
+  
+        
+        
+    return side, arb_zone

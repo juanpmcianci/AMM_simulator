@@ -23,19 +23,19 @@ SECONDS_IN_A_YEAR=3600*24*356
 RATE_COSTUMERS_IN_SECONDS=14
 
 # rate in $$ for each transaction
-RATE_AMOUNT=1000
+RATE_AMOUNT=2000
 #defines rate in years. this is the one we will need
 RATE_COSTUMERS=RATE_COSTUMERS_IN_SECONDS/(SECONDS_IN_A_YEAR) 
 # number of native coins in the initial reserve
 INITIAL_RESERVE=10000
 # time in years for which we run the simulation
-FINAL_TIME=1
+FINAL_TIME=0.5
 # defines how often we look at the oracle. 
 HOURS_IN_A_YEAR=24*365
 # by default, we check the oracle every hour 
 dt=FINAL_TIME/HOURS_IN_A_YEAR
 # Here we define some hyper-parameters for the GBM model of for the price
-R=0.5 #risk-free interest rate
+R=0.2 #risk-free interest rate
 SIGMA=0.6 #volatility
 #price at time 0. 
 INITIAL_PRICE=3200
@@ -64,11 +64,15 @@ plt.show()
 #%%
 #instantiates AMM
 #the initial reserve
-initial_base_reserve=INITIAL_PRICE*INITIAL_RESERVE
+LAMBDA=0.5#np.random.random()
+W_BASE=np.random.random()
+W_QUOTE=1-W_BASE
+initial_quote_reserve=INITIAL_PRICE**(1/LAMBDA)*INITIAL_RESERVE*W_QUOTE/W_BASE
 # initializes the AMM object
-AMM=amm.UNIV2(fee=AMM_FEE,
+AMM=amm.lambdaAMM(fee=AMM_FEE,
              reserves_base=INITIAL_RESERVE,
-             reserves_quote=initial_base_reserve) # trading function=None uses a CFMM, just like UNIV2
+             reserves_quote=initial_quote_reserve,
+             w_quote=W_QUOTE,w_base=W_BASE,l=LAMBDA) # trading function=None uses a CFMM, just like UNIV2
 
 #preallocates total time
 total_time=0
@@ -77,14 +81,17 @@ price_evolution_oracle=[]
 reserves_quote_evolution=[]
 reserves_base_evolution=[]
 slippage_evolution=[]
-
+track_k=[]
+track_collected_fee=[]
 time_list=[0]
 price_evolution_AMM.append(AMM.get_reference_price())
 price_evolution_oracle.append(INITIAL_PRICE)
 reserves_base_evolution.append(AMM.reserves_base)
 reserves_quote_evolution.append(AMM.reserves_quote)
+track_k.append(AMM.get_k())
 trx_evolution=[]
 track_arb_opportunities=[]
+track_collected_fee.append(AMM.collected)
 #%%
 while total_time< FINAL_TIME:
     
@@ -120,8 +127,8 @@ while total_time< FINAL_TIME:
     reserves_quote_evolution.append(AMM.reserves_quote)
     trx_evolution.append(random_amount)
     track_arb_opportunities.append(arb_zone)
-
-    
+    track_k.append(AMM.get_k())
+    track_collected_fee.append(AMM.collected)
 
 
 #%%
@@ -132,8 +139,8 @@ skip=1
 plt.title('Price evolution')
 plt.plot(time_list[::skip],price_evolution_AMM[::skip],label='AMM price')
 plt.plot(time_list[::skip],price_evolution_oracle[::skip],label='Oracle price')
-plt.plot(time_list[::skip],0.95*np.array(price_evolution_oracle)[::skip],'--',color='white',label='LB Oracle price')
-plt.plot(time_list[::skip],1.05*np.array(price_evolution_oracle )[::skip],'--',color='white',label=' UBOracle price')
+plt.plot(time_list[::skip],(1-AMM_FEE)*np.array(price_evolution_oracle)[::skip],'--',color='gray',label='LB Oracle price')
+plt.plot(time_list[::skip],1/(1-AMM_FEE)*np.array(price_evolution_oracle )[::skip],'--',color='gray',label=' UBOracle price')
 
 
 plt.xlabel('Time (years)')
@@ -145,7 +152,7 @@ plt.show()
 
 #
 plt.title('K evolution')
-plt.plot(time_list,np.log(np.array(reserves_quote_evolution)*np.array(reserves_base_evolution)),label='K')
+plt.plot(time_list,np.log(track_k),label='K')
 plt.xlabel('Time (years)')
 plt.ylabel('Units')
 plt.legend()
@@ -157,7 +164,7 @@ plt.plot(time_list,100*(np.array(price_evolution_AMM)-np.array(price_evolution_o
 plt.plot(time_list,0*np.array(price_evolution_AMM),'--')
 
 plt.xlabel('Time (years)')
-plt.ylabel('AMM price - Oracle')
+plt.ylabel('AMM price - Oracle % difference')
 plt.legend()
 plt.show()
 arb_zone=np.array(track_arb_opportunities)
@@ -172,5 +179,13 @@ label=['yes, sell','None','yes, buy']
 plt.pie(arb,  labels=label, autopct='%1.1f%%',
         shadow=True, startangle=90)
 plt.axis('equal')
-  
+
+plt.show()
+#%%
+wealth=np.array(reserves_quote_evolution)+np.array(price_evolution_oracle)*np.array(reserves_base_evolution)
+V_held=np.array(reserves_quote_evolution[0]+np.array(price_evolution_oracle)*reserves_base_evolution[0])
+
+IL=(wealth-V_held)/V_held
+
+plt.plot(time_list,IL)
 
