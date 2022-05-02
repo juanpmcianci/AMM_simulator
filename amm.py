@@ -81,8 +81,16 @@ class UNIV2:
             slippage: "quoted" price vs "filled" price.
 
         '''
-        return self.get_reference_price()*self.quote_trade(amount, side)-amount
-    
+        if side=='buy':
+            slippage=self.get_reference_price() * self.quote_trade(amount, side) - amount
+        elif side=='sell':
+            slippage=-self.get_reference_price() * self.quote_trade(amount, side) + amount
+
+
+
+        return  slippage
+        
+            
 
     
     def get_k(self):
@@ -236,8 +244,14 @@ class lambdaAMM:
             slippage: "quoted" price vs "filled" price.
 
         '''
-        return self.get_reference_price() * self.quote_trade(amount, side) - amount
+        if side=='buy':
+            slippage=self.get_reference_price() * self.quote_trade(amount, side) - amount
+        elif side=='sell':
+            slippage=-self.get_reference_price() * self.quote_trade(amount, side) + amount
 
+
+
+        return  slippage
     def get_k(self):
         '''
 
